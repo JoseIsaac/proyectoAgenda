@@ -1,0 +1,11 @@
+# Entorno virtual
+venv/
+.env
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Configuración local con contraseñas (no subir a la nube)
+config_local.py

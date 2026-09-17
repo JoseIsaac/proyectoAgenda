@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Resultados - Agenda Isaac</title>
+    <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body class="body-agenda">
+    <div class="contenedor">
+        <a href="/" class="volver">← Volver a la agenda completa</a>
+        
+        <h1>🔍 Resultados para: "{{ busqueda }}"</h1>
+        <p>Se encontraron {{ contactos|length }} contacto(s)</p>
+        
+        {% if contactos %}
+            {% for indice, c in contactos %}
+            <div class="resultado-item">
+                <div class="resultado-nombre">{{ c.nombre }}</div>
+                <div>📞 {{ c.telefono }}</div>
+                {% if c.correo %}<div>✉️ {{ c.correo }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="vacio">No se encontraron contactos con ese criterio 😔</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Iniciar Sesión - Agenda Isaac</title>
+    <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body class="body-login">
+    <div class="caja-acceso">
+        <div class="logo">
+            <span class="icono">📒</span>
+            <h1>Agenda Isaac</h1>
+            <p>Sistema de Gestión de Contactos y Recordatorios</p>
+        </div>
+
+        <form class="form-login" action="/login" method="post">
+            <div class="grupo-input">
+                <label for="usuario">👤 Usuario</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Escribe tu usuario" required autocomplete="username">
+            </div>
+
+            <div class="grupo-input">
+                <label for="contrasena">🔑 Contraseña</label>
+                <input type="password" id="contrasena" name="contrasena" placeholder="Escribe tu contraseña" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-ingresar">✅ Ingresar al Sistema</button>
+        </form>
+
+        {% if mensaje %}
+        <div class="mensaje-error">{{ mensaje }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>
