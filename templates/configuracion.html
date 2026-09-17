@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Configuración - Agenda Isaac</title>
+    <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body class="body-agenda">
+    <main class="contenedor">
+        <a href="/" class="volver">← Volver a la agenda</a>
+        <h1>⚙️ Configuración de usuario</h1>
+
+        {% if mensaje %}
+        <div class="{{ 'mensaje-exito' if tipo_mensaje == 'exito' else 'mensaje-error' }}">{{ mensaje }}</div>
+        {% endif %}
+
+        <form class="form-configuracion" action="/configuracion" method="post">
+            <h2>Datos de la cuenta</h2>
+            <div class="grupo-input">
+                <label for="nombre_completo">Nombre completo</label>
+                <input type="text" id="nombre_completo" name="nombre_completo" value="{{ nombre }}" required>
+            </div>
+            <div class="grupo-input">
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" value="{{ usuario }}" required autocomplete="username">
+            </div>
+
+            <h2>Seguridad</h2>
+            <div class="grupo-input">
+                <label for="contrasena_actual">Contraseña actual</label>
+                <input type="password" id="contrasena_actual" name="contrasena_actual" required autocomplete="current-password">
+            </div>
+            <div class="grupo-input">
+                <label for="nueva_contrasena">Nueva contraseña <small>(opcional)</small></label>
+                <input type="password" id="nueva_contrasena" name="nueva_contrasena" autocomplete="new-password">
+            </div>
+            <div class="grupo-input">
+                <label for="confirmar_contrasena">Confirmar nueva contraseña</label>
+                <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" autocomplete="new-password">
+            </div>
+
+            <div class="modal-botones">
+                <a href="/" class="btn-cancelar">Cancelar</a>
+                <button type="submit" class="btn-guardar">💾 Guardar cambios</button>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

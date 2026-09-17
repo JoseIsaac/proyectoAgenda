@@ -79,6 +79,79 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+# ===== CONFIGURACIÓN DE USUARIO =====
+@app.route('/configuracion', methods=['GET', 'POST'])
+def configuracion():
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+
+    mensaje = ""
+    tipo_mensaje = ""
+    usuario_actual = session['usuario']
+
+    if request.method == 'POST':
+        nuevo_usuario = request.form.get('usuario', '').strip()
+        nuevo_nombre = request.form.get('nombre_completo', '').strip()
+        contrasena_actual = request.form.get('contrasena_actual', '').strip()
+        nueva_contrasena = request.form.get('nueva_contrasena', '').strip()
+        confirmar_contrasena = request.form.get('confirmar_contrasena', '').strip()
+
+        if not nuevo_usuario or not nuevo_nombre or not contrasena_actual:
+            mensaje = "Completa el usuario, el nombre y la contraseña actual."
+        elif nueva_contrasena != confirmar_contrasena:
+            mensaje = "Las nuevas contraseñas no coinciden."
+        else:
+            conexion = conectar()
+            if conexion:
+                try:
+                    cursor = conexion.cursor(dictionary=True)
+                    cursor.execute(
+                        "SELECT contrasena FROM usuarios WHERE usuario = %s",
+                        (usuario_actual,)
+                    )
+                    usuario_encontrado = cursor.fetchone()
+
+                    if not usuario_encontrado or usuario_encontrado['contrasena'] != contrasena_actual:
+                        mensaje = "La contraseña actual no es correcta."
+                    elif nueva_contrasena and len(nueva_contrasena) < 4:
+                        mensaje = "La nueva contraseña debe tener al menos 4 caracteres."
+                    else:
+                        if nueva_contrasena:
+                            cursor.execute(
+                                """UPDATE usuarios
+                                   SET usuario = %s, nombre_completo = %s, contrasena = %s
+                                   WHERE usuario = %s""",
+                                (nuevo_usuario, nuevo_nombre, nueva_contrasena, usuario_actual)
+                            )
+                        else:
+                            cursor.execute(
+                                """UPDATE usuarios
+                                   SET usuario = %s, nombre_completo = %s
+                                   WHERE usuario = %s""",
+                                (nuevo_usuario, nuevo_nombre, usuario_actual)
+                            )
+                        conexion.commit()
+                        session['usuario'] = nuevo_usuario
+                        session['nombre'] = nuevo_nombre
+                        usuario_actual = nuevo_usuario
+                        mensaje = "Tus datos se actualizaron correctamente."
+                        tipo_mensaje = "exito"
+                except mysql.connector.IntegrityError:
+                    conexion.rollback()
+                    mensaje = "Ese nombre de usuario ya está en uso."
+                finally:
+                    conexion.close()
+            else:
+                mensaje = "No se pudo conectar a la base de datos."
+
+    return render_template(
+        'configuracion.html',
+        usuario=usuario_actual,
+        nombre=session.get('nombre', ''),
+        mensaje=mensaje,
+        tipo_mensaje=tipo_mensaje
+    )
+
 # ===== PÁGINA PRINCIPAL (PROTEGIDA) =====
 @app.route('/')
 def inicio():
