@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Agenda Isaac</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+
+<body class="body-agenda">
+    <div class="contenedor">
+        <div class="cabecera">
+            <h1>📒 Agenda Isaac</h1>
+            <div>
+                <span class="bienvenida">👋 Bienvenido, {{ usuario }}</span>
+                <a href="/inicio" class="btn-configuracion">🏠 Inicio</a>
+                        <a href="/calendario" class="btn-configuracion">🗓️ Calendario</a>
+
+                <a href="/logout" class="btn-cerrar">🚪 Cerrar Sesión</a>
+            </div>
+        </div>
+
+        <button class="btn-agregar" onclick="abrirModalAgregar()">➕ Agregar Nuevo Contacto</button>
+
+        <!-- === BÚSQUEDA EN VIVO === -->
+        <div class="caja-busqueda">
+            <div class="fila">
+                <input type="text" id="entrada-busqueda" placeholder="🔍 Buscar por nombre, teléfono o correo...">
+            </div>
+        </div>
+
+        <h2 class="titulo-seccion">
+            📋 Mis Contactos <span class="contador" id="contador-total">({{ contactos|length }})</span>
+        </h2>
+
+        <!-- === LISTA DE CONTACTOS (se actualiza al buscar) === -->
+        <div class="lista-contactos">
+            {% if contactos %}
+            {% for contacto in contactos %}
+            <div class="contacto">
+                <div class="contacto-izquierda">
+                    <div class="contacto-nombre">{{ contacto.nombre }}</div>
+                    <div class="contacto-datos">
+                        📞 {{ contacto.telefono }}
+                        {% if contacto.correo %} | ✉️ {{ contacto.correo }}{% endif %}
+                        <br>
+                        <small style="color:#94a3b8; font-size:0.85rem;">
+                            📅 Alta: {{ contacto.fecha_alta.strftime('%d/%m/%Y %H:%M') if contacto.fecha_alta else '—'
+                            }}
+                            {% if contacto.fecha_modificacion %}
+                            · Últ. modif: {{ contacto.fecha_modificacion.strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                <div class="contacto-acciones">
+                    <button class="btn-editar" onclick="abrirModalEditar({{ contacto.id }}, 
+                                                   '{{ contacto.nombre }}', 
+                                                   '{{ contacto.telefono }}', 
+                                                   '{{ contacto.correo or '' }}')">✏️ Editar</button>
+                    <a href="/eliminar/{{ contacto.id }}"
+                        onclick="return confirm('¿Eliminar este contacto? NO se borrará, solo se ocultará ✅')">
+                        <button class="btn-borrar">🗑️ Eliminar</button>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="vacio">Aún no tienes contactos. ¡Agrega el primero arriba! 📝</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- === MODAL AGREGAR === -->
+    <div id="modalAgregar" class="modal-fondo">
+        <div class="modal-contenido">
+            <h2>➕ Nuevo Contacto</h2>
+            <form action="/agregar" method="post">
+                <input type="text" name="nombre" placeholder="Nombre completo" required>
+                <input type="text" name="telefono" placeholder="Teléfono" required>
+                <input type="email" name="correo" placeholder="Correo electrónico">
+                <div class="modal-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalAgregar()">Cancelar</button>
+                    <button type="submit" class="btn-guardar">✅ Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === MODAL EDITAR === -->
+    <div id="modalEditar" class="modal-fondo">
+        <div class="modal-contenido">
+            <h2>✏️ Editar Contacto</h2>
+            <form action="" method="post" id="formEditar">
+                <input type="text" name="nombre" id="editar-nombre" placeholder="Nombre completo" required>
+                <input type="text" name="telefono" id="editar-telefono" placeholder="Teléfono" required>
+                <input type="email" name="correo" id="editar-correo" placeholder="Correo electrónico">
+                <div class="modal-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalEditar()">Cancelar</button>
+                    <button type="submit" class="btn-guardar">💾 Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- === SCRIPTS === pausa inteligente 0.3s === -->
+    <script>
+        // --- Modales ---
+        function abrirModalAgregar() {
+            document.getElementById('modalAgregar').classList.add('modal-activo');
+            document.body.style.overflow = 'hidden';
+        }
+        function cerrarModalAgregar() {
+            document.getElementById('modalAgregar').classList.remove('modal-activo');
+            document.body.style.overflow = 'auto';
+        }
+        document.getElementById('modalAgregar').addEventListener('click', e => {
+            if (e.target === document.getElementById('modalAgregar')) cerrarModalAgregar();
+        });
+
+        function abrirModalEditar(id, nombre, telefono, correo) {
+            document.getElementById('editar-nombre').value = nombre;
+            document.getElementById('editar-telefono').value = telefono;
+            document.getElementById('editar-correo').value = correo;
+            document.getElementById('formEditar').action = `/editar/${id}`;
+            document.getElementById('modalEditar').classList.add('modal-activo');
+            document.body.style.overflow = 'hidden';
+        }
+        function cerrarModalEditar() {
+            document.getElementById('modalEditar').classList.remove('modal-activo');
+            document.body.style.overflow = 'auto';
+        }
+        document.getElementById('modalEditar').addEventListener('click', e => {
+            if (e.target === document.getElementById('modalEditar')) cerrarModalEditar();
+        });
+
+        // --- BÚSQUEDA EN VIVO con pausa inteligente ---
+        let temporizador;
+
+        function buscarConRetraso() {
+            clearTimeout(temporizador);
+            const texto = document.getElementById('entrada-busqueda').value;
+
+            temporizador = setTimeout(() => {
+                fetch('/buscar_en_vivo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `buscar=${encodeURIComponent(texto)}`
+                })
+                    .then(respuesta => respuesta.text())
+                    .then(html => {
+                        document.querySelector('.lista-contactos').innerHTML = html;
+                        // Actualizar contador
+                        const cantidad = document.querySelectorAll('.lista-contactos .contacto').length;
+                        document.getElementById('contador-total').textContent = `(${cantidad})`;
+                    })
+                    .catch(error => console.error('Error en búsqueda:', error));
+            }, 300); // ⏱️ Espera 0.3s después de escribir antes de buscar
+        }
+
+        document.getElementById('entrada-busqueda').addEventListener('input', buscarConRetraso);
+    </script>
+</body>
+
+</html>

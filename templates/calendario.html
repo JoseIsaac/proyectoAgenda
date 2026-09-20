@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗓️ Calendario — Agenda Isaac</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body class="body-agenda">
+    <div class="contenedor">
+        <div class="cabecera">
+            <h1>🗓️ Calendario de Eventos</h1>
+            <div>
+                <span class="bienvenida">👋 Bienvenido, {{ usuario }}</span>
+                <a href="/inicio" class="btn-configuracion">🏠 Inicio</a>
+                <a href="/contactos" class="btn-configuracion">📇 Agenda</a>
+                <a href="/logout" class="btn-cerrar">🚪 Cerrar Sesión</a>
+            </div>
+        </div>
+
+        <!-- Navegación del mes -->
+        <div class="navegacion-mes">
+            <a href="{{ url_for('calendario', mes=mes_anterior, anio=anio_anterior) }}" class="flecha-mes">◀</a>
+            <h2 class="titulo-mes">{{ nombres_mes[mes-1] }} {{ anio }}</h2>
+            <a href="{{ url_for('calendario', mes=mes_siguiente, anio=anio_siguiente) }}" class="flecha-mes">▶</a>
+        </div>
+
+        <div class="dias-semana">
+            <span>Domingo</span>
+            <span>Lunes</span>
+            <span>Martes</span>
+            <span>Miércoles</span>
+            <span>Jueves</span>
+            <span>Viernes</span>
+            <span>Sábado</span>
+        </div>
+
+        <div id="cuadricula-calendario" class="cuadricula-calendario">
+            {% for casilla in casillas %}
+                {% if casilla.vacio %}
+                    <div class="dia-vacio"></div>
+                {% else %}
+                    <div class="dia {% if casilla.es_hoy %}hoy{% endif %}"
+                         onclick="verEventosDia('{{ casilla.fecha }}', {{ casilla.dia }})">
+                        <span class="numero-dia">{{ casilla.dia }}</span>
+                        {% if casilla.cantidad > 0 %}
+                            <span class="icono-evento">📌 {{ casilla.cantidad }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="acciones-calendario">
+            <button class="btn-agregar" onclick="abrirModalEvento()">➕ Agregar Nuevo Evento</button>
+        </div>
+    </div>
+
+    <!-- Modal: Eventos del día -->
+    <div id="modal-dia" class="modal-fondo">
+        <div class="modal-contenido modal-ancho-grande">
+            <h2 id="titulo-dia">📅 Eventos del día</h2>
+            <div id="lista-eventos-dia"></div>
+            <div class="modal-botones">
+                <button class="btn-cancelar" onclick="cerrarModalDia()">Cerrar</button>
+                <button class="btn-guardar" onclick="abrirModalEventoDesdeDia()">➕ Agregar Evento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Agregar Evento -->
+    <div id="modal-evento" class="modal-fondo">
+        <div class="modal-contenido">
+            <h2>➕ Nuevo Evento</h2>
+            <form action="/agregar_evento" method="POST">
+                <input type="hidden" id="fecha-evento" name="fecha">
+                
+                <label>Título:</label>
+                <input type="text" name="titulo" required placeholder="Ej: Reunión familiar">
+                
+                <label>Fecha:</label>
+                <input type="date" id="fecha-mostrar" disabled>
+                
+                <label>Hora:</label>
+                <input type="time" name="hora">
+                
+                <label>Descripción:</label>
+                <input type="text" name="descripcion" placeholder="Detalles del evento">
+                
+                <div class="modal-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalEvento()">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Guardar ✅</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+let fechaSeleccionada = null;
+const nombresMeses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+function verEventosDia(fecha, diaNum) {
+    fechaSeleccionada = fecha;
+    document.getElementById('titulo-dia').textContent = `📅 Eventos del ${diaNum}`;
+    
+    fetch(`/eventos_dia/${fecha}`)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('lista-eventos-dia').innerHTML = html;
+            document.getElementById('modal-dia').classList.add('modal-activo');
+        });
+}
+
+function cerrarModalDia() {
+    document.getElementById('modal-dia').classList.remove('modal-activo');
+}
+
+function abrirModalEvento() {
+    if (!fechaSeleccionada) {
+        const hoy = new Date();
+        fechaSeleccionada = hoy.toISOString().split('T')[0];
+    }
+    document.getElementById('fecha-evento').value = fechaSeleccionada;
+    document.getElementById('fecha-mostrar').value = fechaSeleccionada;
+    document.getElementById('modal-evento').classList.add('modal-activo');
+}
+
+function abrirModalEventoDesdeDia() {
+    cerrarModalDia();
+    setTimeout(abrirModalEvento, 200);
+}
+
+function cerrarModalEvento() {
+    document.getElementById('modal-evento').classList.remove('modal-activo');
+}
+</script>
+</body>
+</html>

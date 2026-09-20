@@ -1,0 +1,25 @@
+{% if eventos %}
+    {% for evento in eventos %}
+    <div class="evento-fila">
+        <div class="evento-hora">
+            ⏰ {% if evento.hora %}
+                {% set hora_str = evento.hora|string %}
+                {{ hora_str[:5] }}
+               {% else %}
+                Todo el día
+               {% endif %}
+        </div>
+        <div class="evento-contenido">
+            <strong>{{ evento.titulo }}</strong>
+            {% if evento.descripcion %}
+            <p>{{ evento.descripcion }}</p>
+            {% endif %}
+        </div>
+        <a href="/eliminar_evento/{{ evento.id }}" 
+           onclick="return confirm('¿Eliminar este evento? ✅ Se marcará como inactivo')"
+           class="btn-borrar-pequeño">🗑️</a>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="vacio">✅ No hay eventos para este día</p>
+{% endif %}
